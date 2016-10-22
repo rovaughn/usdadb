@@ -11,7 +11,7 @@ encoding_patches = {
     0xa0: ' ',
     0xa9: ' ',
     0xe9: '\u00e9', # e with acute
-    0xb5: '\u039c', # mu
+    0xb5: 'u',      # the mu in microgram
 }
 
 def decode(line):
