@@ -1,5 +1,12 @@
+.PHONY: all clean
 
 all: usda.db
+
+with-prices: usda.db FoodPricesDatabase0304.XLS
+	python3 add_prices.py
+
+FoodPricesDatabase0304.XLS:
+	wget 'https://www.cnpp.usda.gov/sites/default/files/usda_food_plans_cost_of_food/FoodPricesDatabase0304.XLS'
 
 sr28asc.zip:
 	wget "https://www.ars.usda.gov/SP2UserFiles/Place/12354500/Data/SR/SR28/dnload/sr28asc.zip"
