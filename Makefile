@@ -1,4 +1,4 @@
-.PHONY: all clean
+.PHONY: all clean with-prices
 
 all: usda.db
 
