@@ -7,9 +7,11 @@ with-prices: usda.db FoodPricesDatabase0304.XLS
 
 FoodPricesDatabase0304.XLS:
 	wget 'https://www.cnpp.usda.gov/sites/default/files/usda_food_plans_cost_of_food/FoodPricesDatabase0304.XLS'
+	shasum -a 512224 -c prices.shasum
 
 sr28asc.zip:
 	wget "https://www.ars.usda.gov/SP2UserFiles/Place/12354500/Data/SR/SR28/dnload/sr28asc.zip"
+	shasum -a 512224 -c usda.shasum
 
 data: sr28asc.zip
 	rm -rf data
