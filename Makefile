@@ -25,7 +25,7 @@ usda.db: schema.sql index.sql data
 	sqlite3 usda.db <index.sql
 
 usda.db.xz: usda.db
-	xz -9k usda.db
+	xz -k usda.db
 
 clean:
 	rm -f sr28asc.zip
