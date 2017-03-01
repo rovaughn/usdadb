@@ -31,4 +31,3 @@ clean:
 	rm -f sr28asc.zip
 	rm -rf data
 	rm -f usda.db
-

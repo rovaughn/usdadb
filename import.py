@@ -5,20 +5,20 @@ import sys
 # text files against what I got by searching the USDA website and made this
 # conversion table.
 encoding_patches = {
-    0x91: '\u8216', # left curly single quote
-    0x92: '\u8217', # right curly single quote
+    0x91: '\u8216',  # left curly single quote
+    0x92: '\u8217',  # right curly single quote
     0x94: '"',
     0xa0: ' ',
     0xa9: ' ',
-    0xe9: '\u00e9', # e with acute
-    0xb5: 'u',      # the mu in microgram
+    0xe9: '\u00e9',  # e with acute
+    0xb5: 'u',       # the mu in microgram
 }
 
 def decode(line):
     return ''.join(encoding_patches.get(b, chr(b)) for b in line)
 
-# A row in the text files is a sequence of fields separated by '^'.  A field can
-# be wrapped in '~'.  For instance:
+# A row in the text files is a sequence of fields separated by '^'. A field can
+# be wrapped in '~'. For instance:
 #
 # ~01009~^~0100~^~Cheese, cheddar~^~CHEESE,CHEDDAR~^~~^~~^~Y~^~~^0^~~^^^^
 #
@@ -48,7 +48,7 @@ def parse_row(row):
         elif row[i] == '^':
             i += 1
         else:
-            raise Exception('Expected ^ or eol at col %d' % (i + 1))
+            raise Exception("Expected ^ or eol at col %d" % (i + 1))
 
 db = sqlite3.connect('usda.db')
 c = db.cursor()
@@ -60,9 +60,15 @@ def process_row(fields, row):
         else:
             yield func(cell)
 
+all_fields = set()
 def import_table(filename, table, fields):
+    global all_fields
+    if set(fields) & all_fields:
+        print("Duplicate fields:", set(fields) & all_fields)
+        all_fields |= set(fields)
+
     filepath = 'data/%s.txt' % filename
-    print('Importing %r into %r...' % (filepath, table))
+    print("Importing %r into %r..." % (filepath, table))
 
     with open(filepath, 'rb') as f:
         for line in f:
@@ -78,7 +84,7 @@ def import_table(filename, table, fields):
                     row
                 )
             except Exception as e:
-                print('Could not insert row %r into table %r' % (row, table))
+                print("Could not insert row %r into table %r" % (row, table))
                 print(e)
                 sys.exit(1)
 
@@ -100,10 +106,10 @@ def date(text):
 
         return '%04s-%02s-%02s' % (year, month, '00')
     except Exception as e:
-        raise Exception('date: %r: %s' % (text, e))
+        raise Exception("date: %r: %s" % (text, e))
 
 import_table('DATA_SRC', 'data_source', (
-    ('id', None),
+    ('data_source', None),
     ('authors', nullify),
     ('title', None),
     ('year', nullify),
@@ -123,7 +129,7 @@ import_table('FOOTNOTE', 'footnote', (
 ))
 
 import_table('FOOD_DES', 'food', (
-    ('id', None),
+    ('food', None),
     ('food_group', None),
     ('long_description', None),
     ('short_description', None),
@@ -140,17 +146,17 @@ import_table('FOOD_DES', 'food', (
 ))
 
 import_table('FD_GROUP', 'food_group', (
-    ('id', None),
+    ('food_group', None),
     ('description', None),
 ))
 
 import_table('LANGUAL', 'food_langual_factor', (
     ('food', None),
-    ('factor', None),
+    ('langual_factor', None),
 ))
 
 import_table('LANGDESC', 'langual_factor', (
-    ('id', None),
+    ('langual_factor', None),
     ('description', None),
 ))
 
@@ -175,7 +181,7 @@ import_table('NUT_DATA', 'food_nutrient', (
 ))
 
 import_table('NUTR_DEF', 'nutrient', (
-    ('id', None),
+    ('nutrient', None),
     ('units', None),
     ('tagname', nullify),
     ('description', None),
@@ -184,12 +190,12 @@ import_table('NUTR_DEF', 'nutrient', (
 ))
 
 import_table('SRC_CD', 'source', (
-    ('id', None),
+    ('source', None),
     ('description', None),
 ))
 
 import_table('DERIV_CD', 'derivation', (
-    ('id', None),
+    ('derivation', None),
     ('description', None),
 ))
 
@@ -211,4 +217,3 @@ import_table('DATSRCLN', 'food_nutrient_source', (
 
 db.commit()
 db.close()
-

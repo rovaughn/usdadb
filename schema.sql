@@ -1,6 +1,5 @@
-
 create table food (
-	id                  integer primary key,
+	food                integer primary key,
 	food_group          integer not null references food_group(id),
 	long_description    text not null,
 	short_description   text not null,
@@ -63,22 +62,22 @@ insert into footnote_type (letter) values ('M');
 insert into footnote_type (letter) values ('N');
 
 create table food_group (
-	id           integer primary key,
+	food_group   integer primary key,
 	description  text not null
 );
 
 create table food_langual_factor (
-	food    integer not null references food(id),
-	factor  text not null references langual_factor(id)
+	food            integer not null references food(id),
+	langual_factor  text not null references langual_factor(id)
 );
 
 create table langual_factor (
-	id           text primary key,
-	description  text not null
+	langual_factor  text primary key,
+	description     text not null
 );
 
 create table nutrient (
-	id              integer primary key,
+	nutrient        integer primary key,
 	units           text not null,
 	tagname         text null,
 	description     text not null,
@@ -87,12 +86,12 @@ create table nutrient (
 );
 
 create table source (
-	id  integer primary key,
-	description text not null
+	source       integer primary key,
+	description  text not null
 );
 
 create table derivation (
-	id           text primary key,
+	derivation   text primary key,
 	description  text not null
 );
 
@@ -103,7 +102,7 @@ create table food_nutrient_source (
 );
 
 create table data_source (
-	id           text primary key,
+	data_source  text primary key,
 	authors      text null,
 	title        text not null,
 	year         integer null,
@@ -113,4 +112,3 @@ create table data_source (
 	start_page   integer null,
 	end_page     integer null
 );
-
