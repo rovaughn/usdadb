@@ -28,6 +28,8 @@ usda.db.xz: usda.db
 	xz -k usda.db
 
 clean:
-	rm -f sr28asc.zip
 	rm -rf data
 	rm -f usda.db
+
+clean-all: clean
+	rm -f sr28asc.zip

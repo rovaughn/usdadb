@@ -1,22 +1,25 @@
-import sqlite3
-import xlrd
 import itertools
+import sqlite3
 
-book = xlrd.open_workbook('FoodPricesDatabase0304.XLS')
-sheet = book.sheet_by_name('food')
+import xlrd
 
-db = sqlite3.connect('usda.db')
+book = xlrd.open_workbook("FoodPricesDatabase0304.XLS")
+sheet = book.sheet_by_name("food")
+
+db = sqlite3.connect("usda.db")
 db.isolation_level = None
 c = db.cursor()
 
-c.execute('''begin''')
-c.execute('''
+c.execute("""begin""")
+c.execute(
+    """
     create table price (
         id int primary key,
         name text,
         price2003 decimal(16, 15)
     )
-''')
+    """
+)
 
 for i in itertools.count(2):
     try:
@@ -25,9 +28,11 @@ for i in itertools.count(2):
         break
 
     code, name, price = row
-    c.execute('''
+    c.execute(
+        """
         insert into price(id, name, price2003) values (?, ?, ?)
-    ''', (code, name, price))
+        """,
+        (code, name, price),
+    )
 
-c.execute('''commit''')
-
+c.execute("""commit""")
