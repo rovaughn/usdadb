@@ -29,29 +29,32 @@ def decode(line: bytes) -> str:
 # strings, since it won't matter when they get inserted into the sqlite
 # database.
 def parse_row(row_bytes: bytes) -> Iterable[str]:
-    row = decode(row_bytes).rstrip()
+    try:
+        row = decode(row_bytes).rstrip()
 
-    i = 0
+        i = 0
 
-    while True:
-        if len(row) > i and row[i] == "~":
-            end = row.index("~", i + 1)
-            yield row[i + 1 : end]
-            i = end + 1
-        else:
-            try:
-                end = row.index("^", i)
-            except ValueError:
-                end = len(row)
-            yield row[i:end]
-            i = end
+        while True:
+            if len(row) > i and row[i] == "~":
+                end = row.index("~", i + 1)
+                yield row[i + 1 : end]
+                i = end + 1
+            else:
+                try:
+                    end = row.index("^", i)
+                except ValueError:
+                    end = len(row)
+                yield row[i:end]
+                i = end
 
-        if len(row) == i:
-            return
-        elif row[i] == "^":
-            i += 1
-        else:
-            raise Exception("Expected ^ or eol at col %d" % (i + 1))
+            if len(row) == i:
+                return
+            elif row[i] == "^":
+                i += 1
+            else:
+                raise Exception("Expected ^ or eol at col %d" % (i + 1))
+    except Exception as e:
+        raise Exception("Parsing {!r}: {}".format(row_bytes.decode(), e)) from e
 
 
 db = sqlite3.connect("usda.db")
@@ -83,27 +86,36 @@ def import_table(
         print("Duplicate fields:", set(fields) & all_fields)
         all_fields |= set(fields)
 
-    filepath = "data/%s.txt" % filename
+    filepath = "usda-data/%s.txt" % filename
     print("Importing %r into %r..." % (filepath, table))
 
     with open(filepath, "rb") as f:
-        for line in f:
-            row = tuple(process_row(fields, parse_row(line)))
+        lines = f.read().strip().split(b"\r\n")
 
-            try:
-                c.execute(
-                    "insert into %s (%s) values (%s)"
-                    % (
-                        table,
-                        ", ".join(name for name, _ in fields),
-                        ", ".join(["?"] * len(fields)),
-                    ),
-                    row,
+    for completed, line in enumerate(lines):
+        if completed > 0 and completed % 10000 == 0:
+            print(
+                "Finished {}/{} lines ({:.0%})".format(
+                    completed, len(lines), completed / len(lines)
                 )
-            except Exception as e:
-                print("Could not insert row %r into table %r" % (row, table))
-                print(e)
-                sys.exit(1)
+            )
+
+        row = tuple(process_row(fields, parse_row(line)))
+
+        try:
+            c.execute(
+                "insert into %s (%s) values (%s)"
+                % (
+                    table,
+                    ", ".join(name for name, _ in fields),
+                    ", ".join(["?"] * len(fields)),
+                ),
+                row,
+            )
+        except Exception as e:
+            print("Could not insert row %r into table %r" % (row, table))
+            print(e)
+            sys.exit(1)
 
 
 def boolify(cell: str) -> bool:
@@ -123,11 +135,25 @@ def date(text: str) -> Optional[str]:
         if text == "":
             return None
 
-        month, year = text.split("/")
+        pieces = text.split("/")
 
-        return "%04s-%02s-%02s" % (year, month, "00")
+        if len(pieces) == 2:
+            month = pieces[0]
+            year = pieces[1]
+            day = "00"
+        elif len(pieces) == 3:
+            day = pieces[0]
+            month = pieces[1]
+            year = pieces[2]
+        else:
+            raise Exception("Date must have two or three components")
+
+        assert 1 <= int(month) <= 12
+        assert 1 <= int(day) <= 31
+
+        return "%04s-%02s-%02s" % (year, month, day)
     except Exception as e:
-        raise Exception("date: %r: %s" % (text, e))
+        raise Exception("Parsing date %r: %s" % (text, e))
 
 
 import_table(
@@ -153,7 +179,7 @@ import_table(
         ("food_id", None),
         ("no", None),
         ("type", None),
-        ("nutrient", nullify),
+        ("nutrient_id", nullify),
         ("description", None),
     ],
 )
@@ -187,30 +213,6 @@ import_table(
 
 import_table(
     "LANGDESC", "langual_factor", [("langual_factor_id", None), ("description", None)]
-)
-
-import_table(
-    "NUT_DATA",
-    "food_nutrient",
-    [
-        ("food_id", None),
-        ("nutrient_id", None),
-        ("amount_100g", None),
-        ("data_points", nullify0),
-        ("std_error", nullify),
-        ("source_id", None),
-        ("derivation_id", nullify),
-        ("reference_food", nullify),
-        ("nutrients_added", boolify),
-        ("studies", nullify),
-        ("min", nullify),
-        ("max", nullify),
-        ("degrees_freedom", nullify),
-        ("lower_error_95", nullify),
-        ("upper_error_95", nullify),
-        ("statistical_note", nullify),
-        ("updated", date),
-    ],
 )
 
 import_table(
@@ -248,6 +250,30 @@ import_table(
     "DATSRCLN",
     "food_nutrient_source",
     [("food_id", None), ("nutrient_id", None), ("data_source_id", None)],
+)
+
+import_table(
+    "NUT_DATA",
+    "food_nutrient",
+    [
+        ("food_id", None),
+        ("nutrient_id", None),
+        ("amount_100g", None),
+        ("data_points", nullify0),
+        ("std_error", nullify),
+        ("source_id", None),
+        ("derivation_id", nullify),
+        ("reference_food_id", nullify),
+        ("nutrients_added", boolify),
+        ("studies", nullify),
+        ("min", nullify),
+        ("max", nullify),
+        ("degrees_freedom", nullify),
+        ("lower_error_95", nullify),
+        ("upper_error_95", nullify),
+        ("statistical_note", nullify),
+        ("updated", date),
+    ],
 )
 
 db.commit()

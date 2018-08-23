@@ -16,23 +16,23 @@ create table food (
 );
 
 create table food_nutrient (
-	food_id           integer not null references food(food_id),
-	nutrient_id       integer not null references nutrient(nutrient_id),
-	amount_100g       decimal(10, 3) not null,
-	data_points       integer null,
-	std_error         decimal(8, 3) null,
-	source_id         integer null references source(source_id),
-	derivation_id     text null references derivation(derivation_id),
-	reference_food    integer null references food(reference_food_id),
-	nutrients_added   boolean not null,
-	studies           integer null,
-	min               decimal(10, 3) null,
-	max               decimal(10, 3) null,
-	degrees_freedom   integer null,
-	lower_error_95    decimal(10, 3) null,
-	upper_error_95    decimal(10, 3) null,
-	statistical_note  text null,
-	updated           text null
+	food_id            integer not null references food(food_id),
+	nutrient_id        integer not null references nutrient(nutrient_id),
+	amount_100g        decimal(10, 3) not null,
+	data_points        integer null,
+	std_error          decimal(8, 3) null,
+	source_id          integer null references source(source_id),
+	derivation_id      text null references derivation(derivation_id),
+	reference_food_id  integer null references food(food_id),
+	nutrients_added    boolean not null,
+	studies            integer null,
+	min                decimal(10, 3) null,
+	max                decimal(10, 3) null,
+	degrees_freedom    integer null,
+	lower_error_95     decimal(10, 3) null,
+	upper_error_95     decimal(10, 3) null,
+	statistical_note   text null,
+	updated            text null
 );
 
 create table weight (
@@ -48,18 +48,10 @@ create table weight (
 create table footnote (
 	food_id      integer not null references food(food_id),
 	no           integer null,
-	type         integer not null references footnote_type(letter),
-	nutrient     integer null,
+	type         char not null,
+	nutrient_id  integer null,
 	description  text not null
 );
-
-create table footnote_type (
-	letter  char primary key
-);
-
-insert into footnote_type (letter) values ('D');
-insert into footnote_type (letter) values ('M');
-insert into footnote_type (letter) values ('N');
 
 create table food_group (
 	food_group_id  integer primary key,
